@@ -151,24 +151,36 @@ window.recharge = async function(){
       amount: parseFloat(amount) 
     });
 
-    const utrNumber = prompt(
-      `Recharge initiated!\n\n` +
-      `Pay ₹${amount} to UPI ID: ${data.upiId}\n\n` +
-      `After payment, enter your UTR/Transaction number:`
-    );
+    // Generate UPI payment link
+    const upiLink = `upi://pay?pa=${data.upiId}&pn=Smart%20Farming&am=${amount}&cu=INR&tn=Recharge%20${data.transactionId}`;
+    
+    // Open payment app
+    alert(`Opening payment app...\n\nPay ₹${amount} to ${data.upiId}\n\nAfter payment, you'll be asked for the UTR number.`);
+    window.location.href = upiLink;
 
-    if(!utrNumber) {
-      alert('Recharge pending. You can complete it later by submitting your UTR number.');
-      return;
-    }
+    // Wait a moment for the app to open, then ask for UTR
+    setTimeout(() => {
+      const utrNumber = prompt(
+        `After completing the payment:\n\n` +
+        `Enter your UTR/Transaction number to confirm:`
+      );
 
-    const confirmData = await apiCall('/payment/recharge/confirm', 'POST', {
-      transactionId: data.transactionId,
-      utrNumber: utrNumber
-    });
+      if(!utrNumber) {
+        alert('Recharge pending. You can complete it later by submitting your UTR number.');
+        return;
+      }
 
-    alert(`${confirmData.message}\n\n${confirmData.note || ''}`);
-    location.reload();
+      apiCall('/payment/recharge/confirm', 'POST', {
+        transactionId: data.transactionId,
+        utrNumber: utrNumber
+      }).then(confirmData => {
+        alert(`${confirmData.message}\n\n${confirmData.note || ''}`);
+        location.reload();
+      }).catch(error => {
+        alert(error.message || 'Failed to confirm recharge');
+      });
+    }, 2000);
+
   } catch (error) {
     alert(error.message || 'Recharge failed');
   }
