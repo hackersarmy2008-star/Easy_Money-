@@ -158,7 +158,7 @@ window.recharge = async function(){
     );
 
     if(!utrNumber) {
-      alert('Recharge cancelled. You can complete it later from transactions.');
+      alert('Recharge pending. You can complete it later by submitting your UTR number.');
       return;
     }
 
@@ -167,7 +167,7 @@ window.recharge = async function(){
       utrNumber: utrNumber
     });
 
-    alert(`Recharge successful! New balance: ₹${confirmData.balance}`);
+    alert(`${confirmData.message}\n\n${confirmData.note || ''}`);
     location.reload();
   } catch (error) {
     alert(error.message || 'Recharge failed');
