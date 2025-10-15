@@ -137,90 +137,14 @@ window.inviteUser = function(){
   alert('Invitation link copied! Share with friends to earn commissions.');
 };
 
-// Recharge function with UPI
-window.recharge = async function(){
-  const amount = prompt('Enter recharge amount (₹):');
-  
-  if(!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-    if(amount !== null) alert('Please enter a valid amount.');
-    return;
-  }
-
-  try {
-    const data = await apiCall('/payment/recharge', 'POST', { 
-      amount: parseFloat(amount) 
-    });
-
-    // Generate UPI payment link
-    const upiLink = `upi://pay?pa=${data.upiId}&pn=Smart%20Farming&am=${amount}&cu=INR&tn=Recharge%20${data.transactionId}`;
-    
-    // Open payment app
-    alert(`Opening payment app...\n\nPay ₹${amount} to ${data.upiId}\n\nAfter payment, you'll be asked for the UTR number.`);
-    window.location.href = upiLink;
-
-    // Wait a moment for the app to open, then ask for UTR
-    setTimeout(() => {
-      const utrNumber = prompt(
-        `After completing the payment:\n\n` +
-        `Enter your UTR/Transaction number to confirm:`
-      );
-
-      if(!utrNumber) {
-        alert('Recharge pending. You can complete it later by submitting your UTR number.');
-        return;
-      }
-
-      apiCall('/payment/recharge/confirm', 'POST', {
-        transactionId: data.transactionId,
-        utrNumber: utrNumber
-      }).then(confirmData => {
-        alert(`${confirmData.message}\n\n${confirmData.note || ''}`);
-        location.reload();
-      }).catch(error => {
-        alert(error.message || 'Failed to confirm recharge');
-      });
-    }, 2000);
-
-  } catch (error) {
-    alert(error.message || 'Recharge failed');
-  }
+// Recharge function - navigate to deposit page
+window.recharge = function(){
+  window.location.href = 'deposit.html';
 };
 
-// Withdraw function
-window.withdraw = async function(){
-  try {
-    const profile = await apiCall('/user/profile', 'GET');
-    const currentBalance = profile.user.balance;
-
-    const amount = prompt(`Enter withdrawal amount (Current balance: ₹${currentBalance}):`);
-    
-    if(!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      if(amount !== null) alert('Please enter a valid amount.');
-      return;
-    }
-
-    if(parseFloat(amount) > currentBalance){
-      alert('Insufficient balance!');
-      return;
-    }
-
-    const upiId = prompt('Enter your UPI ID for withdrawal:');
-    
-    if(!upiId) {
-      alert('UPI ID is required for withdrawal.');
-      return;
-    }
-
-    const data = await apiCall('/payment/withdraw', 'POST', {
-      amount: parseFloat(amount),
-      upiId: upiId
-    });
-
-    alert(`Withdrawal request submitted successfully!\nNew balance: ₹${data.balance}\n\n${data.note}`);
-    location.reload();
-  } catch (error) {
-    alert(error.message || 'Withdrawal failed');
-  }
+// Withdraw function - navigate to withdraw page
+window.withdraw = function(){
+  window.location.href = 'withdraw.html';
 };
 
 // Invest function
