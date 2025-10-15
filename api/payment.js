@@ -55,31 +55,18 @@ async function confirmRecharge(req, res) {
       return res.status(400).json({ error: 'Transaction already processed' });
     }
 
-    await pool.query('BEGIN');
-
     await pool.query(
       'UPDATE transactions SET status = $1, utr_number = $2 WHERE id = $3',
-      ['completed', utrNumber, transactionId]
+      ['verification_pending', utrNumber, transactionId]
     );
-
-    const amount = parseFloat(transaction.rows[0].amount);
-    await pool.query(
-      'UPDATE users SET balance = balance + $1, total_recharge = total_recharge + $1 WHERE id = $2',
-      [amount, userId]
-    );
-
-    await pool.query('COMMIT');
-
-    const userResult = await pool.query('SELECT balance FROM users WHERE id = $1', [userId]);
 
     res.json({
-      message: 'Recharge confirmed successfully',
-      balance: userResult.rows[0].balance
+      message: 'UTR submitted successfully. Your recharge will be verified and processed within 24 hours.',
+      note: 'Admin verification required before balance is credited'
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('Confirm recharge error:', error);
-    res.status(500).json({ error: 'Failed to confirm recharge' });
+    res.status(500).json({ error: 'Failed to submit UTR' });
   }
 }
 
@@ -113,7 +100,7 @@ async function initiateWithdraw(req, res) {
     );
 
     await pool.query(
-      'UPDATE users SET balance = balance - $1 WHERE id = $2',
+      'UPDATE users SET balance = balance - $1, total_withdraw = total_withdraw + $1 WHERE id = $2',
       [amount, userId]
     );
 

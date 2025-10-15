@@ -2,7 +2,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set!');
+  console.error('Please set JWT_SECRET in your environment variables.');
+  process.exit(1);
+}
 
 function generateReferralCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();

@@ -1,47 +1,62 @@
 # Smart Farming Clone
 
 ## Overview
-Smart Farming is a mobile-responsive web application clone that simulates an agricultural investment platform. The app allows users to register, login, view investment products, manage their balance, and participate in a referral program.
+Smart Farming is a mobile-responsive web application clone that simulates an agricultural investment platform. The app allows users to register, login, view investment products, manage their balance, and participate in a referral program. Now features a complete backend API with PostgreSQL database and custom UPI payment integration.
 
 ## Project Structure
-- **Static Frontend Application** - HTML/CSS/JavaScript
-- **Server**: Simple Node.js HTTP server (server.js)
+- **Frontend**: HTML/CSS/JavaScript (Static files)
+- **Backend**: Express.js REST API
+- **Database**: PostgreSQL (Neon-backed Replit database)
 - **Port**: 5000
-- **Storage**: localStorage for user data and app state
+- **Storage**: PostgreSQL database for persistent user data
 
-## Recent Changes (October 14, 2025)
-- ✅ Set up project in Replit environment
-- ✅ Created images directory with placeholder images
-- ✅ Configured Node.js HTTP server on port 5000
-- ✅ Implemented all button functionalities:
-  - Check-in system with daily bonuses (per-user tracking)
-  - Invite/referral system with link copying
-  - Recharge functionality with balance updates (per-user balance)
-  - Withdrawal system with balance validation (per-user balance)
-  - Profile page features (About, Income/Withdraw records, Redeem code, App download)
-- ✅ Connected all interactive elements to JavaScript functions
-- ✅ Dynamic balance and statistics display from localStorage
-- ✅ Fixed user data isolation - all balances and stats are now per-user
-- ✅ Enhanced visual design with modern UI:
-  - Modern purple gradient color scheme (#7c3aed primary)
-  - Improved shadows and depth with consistent theming
-  - Smooth animations and hover effects
-  - Enhanced typography and spacing
-  - Better card designs with borders
-  - Responsive bottom navigation with backdrop blur
-  - Improved form inputs with focus states
-  - Professional login/register pages
+## Recent Changes (October 15, 2025)
+- ✅ **Backend API Implementation**:
+  - Created Express.js backend with RESTful API endpoints
+  - Implemented JWT-based authentication system
+  - Set up PostgreSQL database with proper schema
+  - Migrated from localStorage to persistent database storage
+  
+- ✅ **Authentication System**:
+  - `/api/auth/register` - User registration with password hashing (bcrypt)
+  - `/api/auth/login` - Login with JWT token generation
+  - Token-based authentication middleware
+  - Automatic referral code generation for each user
+  
+- ✅ **Payment System with Custom UPI**:
+  - `/api/payment/recharge` - Initiate recharge with custom UPI ID
+  - `/api/payment/recharge/confirm` - Confirm recharge with UTR number
+  - `/api/payment/withdraw` - Request withdrawal to user's UPI ID
+  - Transaction tracking with status management
+  
+- ✅ **User Management**:
+  - `/api/user/profile` - Get user profile and balance
+  - `/api/user/checkin` - Daily check-in with bonus rewards
+  - `/api/transactions` - View transaction history
+  
+- ✅ **Database Schema**:
+  - `users` table - User accounts, balances, referral codes
+  - `transactions` table - Recharge, withdrawal, and payment records
+  - `checkins` table - Daily check-in tracking
+  - `investments` table - Investment plans and returns
+  
+- ✅ **Frontend Updates**:
+  - Updated all pages to use API instead of localStorage
+  - Real-time balance updates from database
+  - Improved authentication flow
+  - Better error handling and user feedback
 
 ## Features
 
 ### Authentication
-- User registration with phone number and password
-- Login system with validation
-- Session management using localStorage
+- User registration with phone number and password (bcrypt hashing)
+- Secure login with JWT tokens (30-day expiration)
+- Referral code system for inviting friends
+- Session management with token-based auth
 
 ### Dashboard (Home Page)
 - Banner display
-- Quick actions: Check-in, Invite, Recharge, Withdraw
+- Quick actions: Check-in, Recharge, Withdraw, Invite
 - Special investment plans with daily/total profit display
 - Recent transactions feed
 
@@ -52,79 +67,187 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 
 ### Promotion Page
 - Referral statistics (total people, total rebate)
-- Invitation link with copy functionality
+- Invitation link with unique referral code
 - Multi-level commission structure (3 levels)
 
 ### Profile Page (Mine)
 - User profile display
-- Account balance with real-time updates
+- Real-time account balance from database
 - Statistics: Total recharge, withdraw, and welfare
 - Quick links:
   - About Company
-  - Income Record
-  - Withdraw Record
-  - Redeem Code (Easter egg: "WELCOME2024" for ₹50 bonus)
+  - Income Record (from transactions API)
+  - Withdraw Record (from transactions API)
+  - Redeem Code
   - App Download
 - Logout functionality
 
+### Payment System
+- **Recharge**:
+  1. User enters amount
+  2. System provides custom UPI ID for payment
+  3. User completes payment and enters UTR number
+  4. Balance updated after confirmation
+  
+- **Withdrawal**:
+  1. User enters amount and their UPI ID
+  2. System validates balance
+  3. Request submitted for processing
+  4. Balance deducted immediately, processed within 24 hours
+
 ## Technical Stack
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Backend**: Express.js, Node.js
+- **Database**: PostgreSQL (Replit/Neon)
+- **Authentication**: JWT (jsonwebtoken)
+- **Security**: bcrypt for password hashing
 - **Icons**: Bootstrap Icons (CDN)
-- **Server**: Node.js HTTP server
-- **Storage**: Browser localStorage
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+
+### User
+- `GET /api/user/profile` - Get user profile (authenticated)
+- `POST /api/user/checkin` - Daily check-in (authenticated)
+
+### Payment
+- `POST /api/payment/recharge` - Initiate recharge (authenticated)
+- `POST /api/payment/recharge/confirm` - Confirm recharge with UTR (authenticated)
+- `POST /api/payment/withdraw` - Request withdrawal (authenticated)
+- `GET /api/transactions` - Get transaction history (authenticated)
+
+### Health
+- `GET /api/health` - API health check
 
 ## File Structure
 ```
-├── index.html          # Home/Dashboard page
-├── login.html          # Login page
-├── register.html       # Registration page
-├── products.html       # Products listing page
-├── promotion.html      # Referral/Promotion page
-├── mine.html          # Profile/Account page
-├── style.css          # Global styles
-├── main.js            # Shared JavaScript functionality
-├── server.js          # Node.js HTTP server
-└── images/            # Image assets
+├── backend-server.js      # Main Express.js backend server
+├── api/
+│   ├── db.js             # Database connection and schema
+│   ├── auth.js           # Authentication endpoints
+│   └── payment.js        # Payment endpoints
+├── index.html            # Home/Dashboard page
+├── login.html            # Login page
+├── register.html         # Registration page
+├── products.html         # Products listing page
+├── promotion.html        # Referral/Promotion page
+├── mine.html            # Profile/Account page
+├── style.css            # Global styles
+├── main.js              # Frontend API client
+├── server.js            # Legacy static server (not used)
+└── images/              # Image assets
     ├── banner.jpg
-    ├── logo-square.png (SVG)
-    ├── logo-circle.png (SVG)
+    ├── logo-square.png
+    ├── logo-circle.png
     ├── gift-icon.png
     ├── medal1.png
     ├── medal2.png
     └── medal3.png
 ```
 
+## Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET` - Secret key for JWT token signing
+- `CUSTOM_UPI_ID` - UPI ID for receiving payments (default: merchant@upi)
+- `NODE_ENV` - Environment (development/production)
+
 ## How to Use
 
 ### For Users:
 1. **Register**: Create an account with phone number and password
-2. **Login**: Use your credentials to access the dashboard
+2. **Login**: Use your credentials to get authenticated
 3. **Check-in**: Daily check-in for random bonus (₹10-60)
-4. **Invest**: Browse products and invest to earn daily profits
-5. **Recharge**: Add funds to your account balance
-6. **Withdraw**: Withdraw your earnings
-7. **Invite**: Share referral link to earn commissions
-8. **Redeem**: Use code "WELCOME2024" for ₹50 bonus
+4. **Recharge**: Add funds using custom UPI payment
+   - Get UPI ID from system
+   - Make payment via any UPI app
+   - Enter UTR/Transaction number to confirm
+5. **Withdraw**: Withdraw your earnings to your UPI ID
+   - Enter amount and your UPI ID
+   - Request processed within 24 hours
+6. **Invest**: Browse products and invest to earn daily profits
+7. **Invite**: Share referral link with your unique code
 
 ### For Developers:
 - Server runs on port 5000 (0.0.0.0:5000)
-- All user data stored in browser localStorage
+- All user data stored in PostgreSQL database
+- JWT tokens stored in browser localStorage
 - Cache-Control headers set to prevent caching issues
-- Simple HTTP server serves static files
+- Database auto-initializes on server start
 
 ## Configuration
-- **Development Server**: `node server.js`
+- **Backend Server**: `node backend-server.js`
 - **Host**: 0.0.0.0 (required for Replit proxy)
 - **Port**: 5000 (only port exposed in Replit)
+- **Database**: PostgreSQL (managed by Replit)
 
-## Future Enhancements
-- Backend API for persistent data storage
-- Real payment gateway integration
-- Advanced user analytics dashboard
-- Mobile app version
-- Email/SMS notifications
+## Security Features
+- Password hashing with bcrypt (10 rounds)
+- JWT token authentication (30-day expiration)
+- Protected API routes with authentication middleware
+- SQL injection prevention with parameterized queries
+- Transaction integrity with database transactions
+
+## Database Schema
+
+### users
+- `id` - Primary key
+- `phone` - Unique phone number
+- `password_hash` - Bcrypt hashed password
+- `balance` - Current account balance
+- `total_recharge` - Total amount recharged
+- `total_withdraw` - Total amount withdrawn
+- `total_welfare` - Total welfare/bonus received
+- `referral_code` - Unique referral code
+- `referred_by` - Referral code of referrer
+- `created_at` - Account creation timestamp
+
+### transactions
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `type` - Transaction type (recharge/withdraw)
+- `amount` - Transaction amount
+- `status` - Status (pending/completed)
+- `upi_id` - UPI ID for withdrawals
+- `utr_number` - UTR number for recharges
+- `created_at` - Transaction timestamp
+
+### checkins
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `amount` - Bonus amount
+- `checkin_date` - Date of check-in
+- `created_at` - Check-in timestamp
+
+### investments
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `plan_name` - Investment plan name
+- `amount` - Investment amount
+- `daily_profit` - Daily profit amount
+- `total_profit` - Total expected profit
+- `days` - Investment duration in days
+- `status` - Investment status (active/completed)
+- `created_at` - Investment timestamp
+
+## Custom UPI Payment Flow
+1. User initiates recharge request
+2. Backend creates pending transaction in database
+3. System provides custom UPI ID (configurable via CUSTOM_UPI_ID env variable)
+4. User makes payment via any UPI app (PhonePe, GPay, Paytm, etc.)
+5. User enters UTR/Transaction number from payment receipt
+6. Backend verifies and updates:
+   - Transaction status to 'completed'
+   - User balance increased
+   - Total recharge updated
+7. User can now use the balance in the app
 
 ## Notes
-- All monetary transactions are simulated for demonstration
-- Referral system tracks invites but doesn't affect actual rewards (demo mode)
-- Easter egg redeem code: "WELCOME2024" for ₹50 bonus
+- All monetary transactions use custom UPI payment system
+- Recharge requires UTR number confirmation
+- Withdrawals are processed to user's UPI ID
+- Database transactions ensure data consistency
+- Referral system is tracked in database for future rewards
+- Check-in system prevents duplicate daily check-ins
