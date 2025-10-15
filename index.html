@@ -10,7 +10,7 @@
 <body>
 <script>
   // Protect page: redirect to login if not logged in
-  if (!localStorage.getItem('loggedInUser')) {
+  if (!localStorage.getItem('authToken')) {
     window.location.href = 'login.html';
   }
 </script>

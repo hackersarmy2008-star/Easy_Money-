@@ -101,11 +101,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api') && req.method === 'GET') {
     res.sendFile(path.join(__dirname, 'login.html'));
-  } else {
+  } else if (req.path.startsWith('/api')) {
     res.status(404).json({ error: 'API endpoint not found' });
+  } else {
+    next();
   }
 });
 
