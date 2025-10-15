@@ -82,18 +82,24 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
   - App Download
 - Logout functionality
 
-### Payment System
-- **Recharge**:
-  1. User enters amount
-  2. System provides custom UPI ID for payment
-  3. User completes payment and enters UTR number
-  4. Balance updated after confirmation
+### Payment System (Winzo-Style)
+- **Deposit Page** (`deposit.html`):
+  - Dedicated deposit page with clean UI
+  - Enter amount with quick amount buttons (₹100, ₹500, ₹1000, etc.)
+  - UPI payment method selection
+  - Automatic UPI app opening with pre-filled amount
+  - UTR number submission for verification
+  - Recent deposit transactions history
+  - Admin verification required before balance credit
   
-- **Withdrawal**:
-  1. User enters amount and their UPI ID
-  2. System validates balance
-  3. Request submitted for processing
-  4. Balance deducted immediately, processed within 24 hours
+- **Withdrawal Page** (`withdraw.html`):
+  - Dedicated withdrawal page
+  - Display available balance
+  - Enter withdrawal amount (minimum ₹50)
+  - Enter UPI ID for receiving payment
+  - Withdrawal information and guidelines
+  - Recent withdrawal transactions history
+  - Balance deducted immediately, processed within 24 hours
 
 ## Technical Stack
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
@@ -135,6 +141,8 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 ├── products.html         # Products listing page
 ├── promotion.html        # Referral/Promotion page
 ├── mine.html            # Profile/Account page
+├── deposit.html         # Deposit/Recharge page (Winzo-style)
+├── withdraw.html        # Withdrawal page (Winzo-style)
 ├── style.css            # Global styles
 ├── main.js              # Frontend API client
 ├── server.js            # Legacy static server (not used)
