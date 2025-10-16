@@ -60,6 +60,30 @@ async function initDatabase() {
       )
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS qr_codes (
+        id SERIAL PRIMARY KEY,
+        upi_id VARCHAR(100) UNIQUE NOT NULL,
+        qr_position INTEGER UNIQUE NOT NULL,
+        successful_payments INTEGER DEFAULT 0,
+        max_payments_per_qr INTEGER DEFAULT 10,
+        is_active BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Initialize first QR if table is empty
+    const qrCount = await pool.query('SELECT COUNT(*) FROM qr_codes');
+    if (parseInt(qrCount.rows[0].count) === 0) {
+      console.log('Initializing QR rotation system...');
+      await pool.query(
+        'INSERT INTO qr_codes (upi_id, qr_position, is_active) VALUES ($1, $2, $3)',
+        ['merchant@upi', 1, true]
+      );
+      console.log('QR rotation system initialized with default QR');
+    }
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
