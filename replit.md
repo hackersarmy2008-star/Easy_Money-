@@ -1,16 +1,34 @@
 # Easy Money
 
 ## Overview
-Smart Farming is a mobile-responsive web application clone that simulates an agricultural investment platform. The app allows users to register, login, view investment products, manage their balance, and participate in a referral program. Now features a complete backend API with PostgreSQL database and custom UPI payment integration.
+Easy Money Premium is a mobile-responsive web application that simulates an agricultural investment platform. The app allows users to register, login, view investment products, manage their balance, and participate in a referral program. Features a complete backend API with SQLite database and automatic UPI payment rotation system.
 
 ## Project Structure
 - **Frontend**: HTML/CSS/JavaScript (Static files)
 - **Backend**: Express.js REST API
-- **Database**: PostgreSQL (Neon-backed Replit database)
+- **Database**: SQLite (better-sqlite3)
 - **Port**: 5000
-- **Storage**: PostgreSQL database for persistent user data
+- **Storage**: SQLite database for persistent user data
 
-## Recent Changes (October 15, 2025)
+## Recent Changes (November 2, 2025)
+- ✅ **Database Migration to SQLite**:
+  - Migrated from PostgreSQL to SQLite using better-sqlite3
+  - Updated all API endpoints to use synchronous SQLite API
+  - Database transactions for data integrity
+  - WAL mode enabled for better performance
+  
+- ✅ **UPI Payment Rotation System**:
+  - 7 UPI IDs configured for automatic rotation
+  - UPI IDs: hacker-shaw@fam, jadhavnitin6@bpunity, aryansinghthakurrajput-1@okhdfcbank, dheerajya799-20@okicici, sangeetaya79@okicici, Manjughazipur7575-3@okhdfcbank, tanishqsonkar91400-1@okaxis
+  - Automatic rotation after every 10 successful payments
+  - Active UPI tracking in qr_codes table
+  
+- ✅ **Branding Update**:
+  - Updated to "Easy Money Premium" branding
+  - Replaced all images with new brand assets
+  - New logo, banners, and icons throughout the app
+
+## Previous Changes (October 15, 2025)
 - ✅ **Backend API Implementation**:
   - Created Express.js backend with RESTful API endpoints
   - Implemented JWT-based authentication system
@@ -104,7 +122,7 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 ## Technical Stack
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Backend**: Express.js, Node.js
-- **Database**: PostgreSQL (Replit/Neon)
+- **Database**: SQLite (better-sqlite3)
 - **Authentication**: JWT (jsonwebtoken)
 - **Security**: bcrypt for password hashing
 - **Icons**: Bootstrap Icons (CDN)
@@ -157,10 +175,14 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 ```
 
 ## Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for JWT token signing
-- `CUSTOM_UPI_ID` - UPI ID for receiving payments (default: merchant@upi)
+- `JWT_SECRET` - Secret key for JWT token signing (default: easymoney-premium-jwt-secret-2024)
 - `NODE_ENV` - Environment (development/production)
+
+## UPI Payment System
+- **7 UPI IDs configured** for automatic rotation
+- **Rotation trigger**: After every 10 successful payments
+- **Current active UPI**: hacker-shaw@fam (position 1)
+- System automatically cycles through all 7 UPI IDs to distribute payment load
 
 ## How to Use
 
@@ -189,7 +211,7 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 - **Backend Server**: `node backend-server.js`
 - **Host**: 0.0.0.0 (required for Replit proxy)
 - **Port**: 5000 (only port exposed in Replit)
-- **Database**: PostgreSQL (managed by Replit)
+- **Database**: SQLite (database.sqlite file)
 
 ## Security Features
 - Password hashing with bcrypt (10 rounds)
@@ -200,45 +222,55 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 
 ## Database Schema
 
-### users
-- `id` - Primary key
+### users (SQLite)
+- `id` - Primary key (AUTOINCREMENT)
 - `phone` - Unique phone number
 - `password_hash` - Bcrypt hashed password
-- `balance` - Current account balance
-- `total_recharge` - Total amount recharged
-- `total_withdraw` - Total amount withdrawn
-- `total_welfare` - Total welfare/bonus received
+- `balance` - Current account balance (REAL)
+- `total_recharge` - Total amount recharged (REAL)
+- `total_withdraw` - Total amount withdrawn (REAL)
+- `total_welfare` - Total welfare/bonus received (REAL)
 - `referral_code` - Unique referral code
 - `referred_by` - Referral code of referrer
 - `created_at` - Account creation timestamp
 
-### transactions
-- `id` - Primary key
+### transactions (SQLite)
+- `id` - Primary key (AUTOINCREMENT)
 - `user_id` - Foreign key to users
 - `type` - Transaction type (recharge/withdraw)
-- `amount` - Transaction amount
+- `amount` - Transaction amount (REAL)
 - `status` - Status (pending/completed)
 - `upi_id` - UPI ID for withdrawals
 - `utr_number` - UTR number for recharges
 - `created_at` - Transaction timestamp
 
-### checkins
-- `id` - Primary key
+### checkins (SQLite)
+- `id` - Primary key (AUTOINCREMENT)
 - `user_id` - Foreign key to users
-- `amount` - Bonus amount
+- `amount` - Bonus amount (REAL)
 - `checkin_date` - Date of check-in
 - `created_at` - Check-in timestamp
 
-### investments
-- `id` - Primary key
+### investments (SQLite)
+- `id` - Primary key (AUTOINCREMENT)
 - `user_id` - Foreign key to users
 - `plan_name` - Investment plan name
-- `amount` - Investment amount
-- `daily_profit` - Daily profit amount
-- `total_profit` - Total expected profit
+- `amount` - Investment amount (REAL)
+- `daily_profit` - Daily profit amount (REAL)
+- `total_profit` - Total expected profit (REAL)
 - `days` - Investment duration in days
 - `status` - Investment status (active/completed)
 - `created_at` - Investment timestamp
+
+### qr_codes (SQLite)
+- `id` - Primary key (AUTOINCREMENT)
+- `upi_id` - UPI ID for payments
+- `qr_position` - Position in rotation sequence (1-7)
+- `successful_payments` - Count of successful payments
+- `max_payments_per_qr` - Maximum payments before rotation (default: 10)
+- `is_active` - Currently active UPI (1 or 0)
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
 
 ## Custom UPI Payment Flow
 1. User initiates recharge request
