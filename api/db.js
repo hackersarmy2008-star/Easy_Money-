@@ -1,87 +1,108 @@
-const { Pool } = require('pg');
+const Database = require('better-sqlite3');
+const path = require('path');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const dbPath = path.join(__dirname, '..', 'database.sqlite');
+const db = new Database(dbPath);
 
-async function initDatabase() {
+db.pragma('journal_mode = WAL');
+
+function initDatabase() {
   try {
-    await pool.query(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        phone VARCHAR(15) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        balance DECIMAL(10, 2) DEFAULT 0.00,
-        total_recharge DECIMAL(10, 2) DEFAULT 0.00,
-        total_withdraw DECIMAL(10, 2) DEFAULT 0.00,
-        total_welfare DECIMAL(10, 2) DEFAULT 0.00,
-        referral_code VARCHAR(10) UNIQUE NOT NULL,
-        referred_by VARCHAR(10),
-        created_at TIMESTAMP DEFAULT NOW()
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        phone TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        balance REAL DEFAULT 0.00,
+        total_recharge REAL DEFAULT 0.00,
+        total_withdraw REAL DEFAULT 0.00,
+        total_welfare REAL DEFAULT 0.00,
+        referral_code TEXT UNIQUE NOT NULL,
+        referred_by TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await pool.query(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS transactions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        type VARCHAR(20) NOT NULL,
-        amount DECIMAL(10, 2) NOT NULL,
-        status VARCHAR(20) DEFAULT 'pending',
-        upi_id VARCHAR(100),
-        utr_number VARCHAR(50),
-        created_at TIMESTAMP DEFAULT NOW()
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        amount REAL NOT NULL,
+        status TEXT DEFAULT 'pending',
+        upi_id TEXT,
+        utr_number TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);
 
-    await pool.query(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS checkins (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        amount DECIMAL(10, 2) NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
         checkin_date DATE NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW(),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
         UNIQUE(user_id, checkin_date)
       )
     `);
 
-    await pool.query(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS investments (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        plan_name VARCHAR(100) NOT NULL,
-        amount DECIMAL(10, 2) NOT NULL,
-        daily_profit DECIMAL(10, 2) NOT NULL,
-        total_profit DECIMAL(10, 2) NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        plan_name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        daily_profit REAL NOT NULL,
+        total_profit REAL NOT NULL,
         days INTEGER NOT NULL,
-        status VARCHAR(20) DEFAULT 'active',
-        created_at TIMESTAMP DEFAULT NOW()
+        status TEXT DEFAULT 'active',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);
 
-    await pool.query(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS qr_codes (
-        id SERIAL PRIMARY KEY,
-        upi_id VARCHAR(100) UNIQUE NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        upi_id TEXT UNIQUE NOT NULL,
         qr_position INTEGER UNIQUE NOT NULL,
         successful_payments INTEGER DEFAULT 0,
         max_payments_per_qr INTEGER DEFAULT 10,
-        is_active BOOLEAN DEFAULT false,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        is_active INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Initialize first QR if table is empty
-    const qrCount = await pool.query('SELECT COUNT(*) FROM qr_codes');
-    if (parseInt(qrCount.rows[0].count) === 0) {
-      console.log('Initializing QR rotation system...');
-      await pool.query(
-        'INSERT INTO qr_codes (upi_id, qr_position, is_active) VALUES ($1, $2, $3)',
-        ['merchant@upi', 1, true]
+    const qrCount = db.prepare('SELECT COUNT(*) as count FROM qr_codes').get();
+    if (qrCount.count === 0) {
+      console.log('Initializing QR rotation system with 7 UPI IDs...');
+      
+      const upiIds = [
+        'hacker-shaw@fam',
+        'jadhavnitin6@bpunity',
+        'aryansinghthakurrajput-1@okhdfcbank',
+        'dheerajya799-20@okicici',
+        'sangeetaya79@okicici',
+        'Manjughazipur7575-3@okhdfcbank',
+        'tanishqsonkar91400-1@okaxis'
+      ];
+
+      const insertQR = db.prepare(
+        'INSERT INTO qr_codes (upi_id, qr_position, is_active) VALUES (?, ?, ?)'
       );
-      console.log('QR rotation system initialized with default QR');
+
+      const insertMany = db.transaction((codes) => {
+        codes.forEach((code, index) => {
+          insertQR.run(code, index + 1, index === 0 ? 1 : 0);
+        });
+      });
+
+      insertMany(upiIds);
+      console.log('QR rotation system initialized with 7 UPI IDs');
     }
 
     console.log('Database initialized successfully');
@@ -91,4 +112,4 @@ async function initDatabase() {
   }
 }
 
-module.exports = { pool, initDatabase };
+module.exports = { db, initDatabase };

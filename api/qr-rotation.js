@@ -1,189 +1,148 @@
-const { pool } = require('./db');
+const { db } = require('./db');
 
-// Get the current active QR code
-async function getActiveQR() {
-  const result = await pool.query(
-    'SELECT * FROM qr_codes WHERE is_active = true ORDER BY qr_position LIMIT 1'
-  );
+function getActiveQR() {
+  let result = db.prepare(
+    'SELECT * FROM qr_codes WHERE is_active = 1 ORDER BY qr_position LIMIT 1'
+  ).get();
 
-  if (result.rows.length === 0) {
-    // If no active QR, activate the first one
-    const firstQR = await pool.query(
+  if (!result) {
+    const firstQR = db.prepare(
       'SELECT * FROM qr_codes ORDER BY qr_position LIMIT 1'
-    );
+    ).get();
     
-    if (firstQR.rows.length > 0) {
-      await pool.query(
-        'UPDATE qr_codes SET is_active = true WHERE id = $1',
-        [firstQR.rows[0].id]
-      );
-      return firstQR.rows[0];
+    if (firstQR) {
+      db.prepare(
+        'UPDATE qr_codes SET is_active = 1 WHERE id = ?'
+      ).run(firstQR.id);
+      return firstQR;
     }
     
     throw new Error('No QR codes available');
   }
 
-  return result.rows[0];
+  return result;
 }
 
-// Rotate to next QR code
-async function rotateQR() {
-  await pool.query('BEGIN');
+function rotateQR() {
+  const transaction = db.transaction(() => {
+    const currentQR = db.prepare(
+      'SELECT * FROM qr_codes WHERE is_active = 1 ORDER BY qr_position LIMIT 1'
+    ).get();
 
-  try {
-    // Get current active QR
-    const currentQR = await pool.query(
-      'SELECT * FROM qr_codes WHERE is_active = true ORDER BY qr_position LIMIT 1'
-    );
-
-    if (currentQR.rows.length === 0) {
-      await pool.query('ROLLBACK');
+    if (!currentQR) {
       return null;
     }
 
-    const current = currentQR.rows[0];
+    db.prepare(
+      'UPDATE qr_codes SET is_active = 0 WHERE id = ?'
+    ).run(currentQR.id);
 
-    // Deactivate current QR
-    await pool.query(
-      'UPDATE qr_codes SET is_active = false WHERE id = $1',
-      [current.id]
-    );
+    let nextQR = db.prepare(
+      'SELECT * FROM qr_codes WHERE qr_position > ? ORDER BY qr_position LIMIT 1'
+    ).get(currentQR.qr_position);
 
-    // Get next QR
-    let nextQR = await pool.query(
-      'SELECT * FROM qr_codes WHERE qr_position > $1 ORDER BY qr_position LIMIT 1',
-      [current.qr_position]
-    );
-
-    // If no next QR, loop back to first
-    if (nextQR.rows.length === 0) {
-      nextQR = await pool.query(
+    if (!nextQR) {
+      nextQR = db.prepare(
         'SELECT * FROM qr_codes ORDER BY qr_position LIMIT 1'
-      );
+      ).get();
     }
 
-    if (nextQR.rows.length === 0) {
-      await pool.query('ROLLBACK');
+    if (!nextQR) {
       throw new Error('No QR codes available for rotation');
     }
 
-    // Activate next QR
-    await pool.query(
-      'UPDATE qr_codes SET is_active = true, successful_payments = 0, updated_at = NOW() WHERE id = $1',
-      [nextQR.rows[0].id]
-    );
+    db.prepare(
+      'UPDATE qr_codes SET is_active = 1, successful_payments = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(nextQR.id);
 
-    await pool.query('COMMIT');
+    console.log(`QR rotated from position ${currentQR.qr_position} to ${nextQR.qr_position}`);
+    return nextQR;
+  });
 
-    console.log(`QR rotated from position ${current.qr_position} to ${nextQR.rows[0].qr_position}`);
-    return nextQR.rows[0];
-  } catch (error) {
-    await pool.query('ROLLBACK');
-    throw error;
-  }
+  return transaction();
 }
 
-// Increment payment count and rotate if needed
-async function incrementPaymentAndRotate() {
-  await pool.query('BEGIN');
+function incrementPaymentAndRotate() {
+  const transaction = db.transaction(() => {
+    const qr = db.prepare(
+      'SELECT * FROM qr_codes WHERE is_active = 1 ORDER BY qr_position LIMIT 1'
+    ).get();
 
-  try {
-    // Get current active QR
-    const currentQR = await pool.query(
-      'SELECT * FROM qr_codes WHERE is_active = true ORDER BY qr_position LIMIT 1'
-    );
-
-    if (currentQR.rows.length === 0) {
-      await pool.query('ROLLBACK');
+    if (!qr) {
       return null;
     }
 
-    const qr = currentQR.rows[0];
-
-    // Increment successful payments
-    await pool.query(
-      'UPDATE qr_codes SET successful_payments = successful_payments + 1, updated_at = NOW() WHERE id = $1',
-      [qr.id]
-    );
+    db.prepare(
+      'UPDATE qr_codes SET successful_payments = successful_payments + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(qr.id);
 
     const newCount = qr.successful_payments + 1;
 
-    await pool.query('COMMIT');
-
-    // Check if rotation is needed
     if (newCount >= qr.max_payments_per_qr) {
       console.log(`QR ${qr.qr_position} reached ${newCount} payments. Rotating...`);
-      await rotateQR();
+      rotateQR();
     } else {
       console.log(`QR ${qr.qr_position} now has ${newCount}/${qr.max_payments_per_qr} payments`);
     }
 
     return true;
-  } catch (error) {
-    await pool.query('ROLLBACK');
-    throw error;
-  }
+  });
+
+  return transaction();
 }
 
-// Add new QR code
-async function addQRCode(upiId) {
-  const maxPosition = await pool.query(
+function addQRCode(upiId) {
+  const maxPosition = db.prepare(
     'SELECT COALESCE(MAX(qr_position), 0) as max_pos FROM qr_codes'
-  );
+  ).get();
   
-  const newPosition = maxPosition.rows[0].max_pos + 1;
+  const newPosition = maxPosition.max_pos + 1;
 
-  const result = await pool.query(
+  const result = db.prepare(
     `INSERT INTO qr_codes (upi_id, qr_position) 
-     VALUES ($1, $2) 
-     RETURNING *`,
-    [upiId, newPosition]
-  );
+     VALUES (?, ?)`
+  ).run(upiId, newPosition);
 
-  return result.rows[0];
+  return db.prepare('SELECT * FROM qr_codes WHERE id = ?').get(result.lastInsertRowid);
 }
 
-// Get all QR codes
-async function getAllQRCodes() {
-  const result = await pool.query(
+function getAllQRCodes() {
+  const result = db.prepare(
     'SELECT * FROM qr_codes ORDER BY qr_position'
-  );
-  return result.rows;
+  ).all();
+  return result;
 }
 
-// Update QR code
-async function updateQRCode(id, upiId) {
-  const result = await pool.query(
-    'UPDATE qr_codes SET upi_id = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-    [upiId, id]
-  );
-  return result.rows[0];
+function updateQRCode(id, upiId) {
+  db.prepare(
+    'UPDATE qr_codes SET upi_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+  ).run(upiId, id);
+  
+  return db.prepare('SELECT * FROM qr_codes WHERE id = ?').get(id);
 }
 
-// Delete QR code
-async function deleteQRCode(id) {
-  await pool.query('DELETE FROM qr_codes WHERE id = $1', [id]);
+function deleteQRCode(id) {
+  db.prepare('DELETE FROM qr_codes WHERE id = ?').run(id);
   return true;
 }
 
-// Get QR rotation stats
-async function getQRStats() {
-  const activeQR = await pool.query(
-    'SELECT * FROM qr_codes WHERE is_active = true LIMIT 1'
-  );
+function getQRStats() {
+  const activeQR = db.prepare(
+    'SELECT * FROM qr_codes WHERE is_active = 1 LIMIT 1'
+  ).get();
 
-  const totalQRs = await pool.query(
+  const totalQRs = db.prepare(
     'SELECT COUNT(*) as count FROM qr_codes'
-  );
+  ).get();
 
-  const totalPayments = await pool.query(
+  const totalPayments = db.prepare(
     'SELECT SUM(successful_payments) as total FROM qr_codes'
-  );
+  ).get();
 
   return {
-    activeQR: activeQR.rows[0] || null,
-    totalQRs: parseInt(totalQRs.rows[0].count),
-    totalPayments: parseInt(totalPayments.rows[0].total || 0)
+    activeQR: activeQR || null,
+    totalQRs: totalQRs.count,
+    totalPayments: totalPayments.total || 0
   };
 }
 

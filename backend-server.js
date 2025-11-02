@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const { initDatabase, pool } = require('./api/db');
+const { initDatabase, db } = require('./api/db');
 const { register, login, authenticateToken } = require('./api/auth');
 const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions } = require('./api/payment');
 
@@ -31,17 +31,16 @@ app.post('/api/auth/login', login);
 
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = db.prepare(
       `SELECT id, phone, balance, total_recharge, total_withdraw, total_welfare, referral_code 
-       FROM users WHERE id = $1`,
-      [req.user.userId]
-    );
+       FROM users WHERE id = ?`
+    ).get(req.user.userId);
 
-    if (result.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user: result.rows[0] });
+    res.json({ user: result });
   } catch (error) {
     console.error('Profile error:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
@@ -53,40 +52,36 @@ app.post('/api/user/checkin', authenticateToken, async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
 
   try {
-    const existing = await pool.query(
-      'SELECT id FROM checkins WHERE user_id = $1 AND checkin_date = $2',
-      [userId, today]
-    );
+    const existing = db.prepare(
+      'SELECT id FROM checkins WHERE user_id = ? AND checkin_date = ?'
+    ).get(userId, today);
 
-    if (existing.rows.length > 0) {
+    if (existing) {
       return res.status(400).json({ error: 'Already checked in today' });
     }
 
     const bonus = Math.floor(Math.random() * 51) + 10;
 
-    await pool.query('BEGIN');
+    const checkinTransaction = db.transaction(() => {
+      db.prepare(
+        'INSERT INTO checkins (user_id, amount, checkin_date) VALUES (?, ?, ?)'
+      ).run(userId, bonus, today);
 
-    await pool.query(
-      'INSERT INTO checkins (user_id, amount, checkin_date) VALUES ($1, $2, $3)',
-      [userId, bonus, today]
-    );
+      db.prepare(
+        'UPDATE users SET balance = balance + ?, total_welfare = total_welfare + ? WHERE id = ?'
+      ).run(bonus, bonus, userId);
+    });
 
-    await pool.query(
-      'UPDATE users SET balance = balance + $1, total_welfare = total_welfare + $1 WHERE id = $2',
-      [bonus, userId]
-    );
+    checkinTransaction();
 
-    await pool.query('COMMIT');
-
-    const userResult = await pool.query('SELECT balance FROM users WHERE id = $1', [userId]);
+    const userResult = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId);
 
     res.json({
       message: 'Check-in successful!',
       bonus,
-      balance: userResult.rows[0].balance
+      balance: userResult.balance
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('Check-in error:', error);
     res.status(500).json({ error: 'Check-in failed' });
   }
@@ -111,9 +106,9 @@ app.use((req, res, next) => {
   }
 });
 
-async function startServer() {
+function startServer() {
   try {
-    await initDatabase();
+    initDatabase();
     app.listen(PORT, HOST, () => {
       console.log(`Backend server running at http://${HOST}:${PORT}/`);
       console.log('API endpoints available at /api/*');
