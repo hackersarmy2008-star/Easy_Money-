@@ -4,7 +4,8 @@ const cors = require('cors');
 const path = require('path');
 const { initDatabase, db } = require('./api/db');
 const { register, login, authenticateToken } = require('./api/auth');
-const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions } = require('./api/payment');
+const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions, approveRecharge } = require('./api/payment');
+const { authenticateAdmin, getStats, getAllUsers, getAllTransactions, getPendingPayments, approvePayment, rejectPayment } = require('./api/admin-sqlite');
 
 const app = express();
 const PORT = 5000;
@@ -92,6 +93,13 @@ app.post('/api/payment/recharge/confirm', authenticateToken, confirmRecharge);
 app.post('/api/payment/withdraw', authenticateToken, initiateWithdraw);
 app.get('/api/transactions', authenticateToken, getTransactions);
 
+app.get('/api/admin/stats', authenticateToken, authenticateAdmin, getStats);
+app.get('/api/admin/users', authenticateToken, authenticateAdmin, getAllUsers);
+app.get('/api/admin/transactions', authenticateToken, authenticateAdmin, getAllTransactions);
+app.get('/api/admin/pending', authenticateToken, authenticateAdmin, getPendingPayments);
+app.post('/api/admin/approve', authenticateToken, authenticateAdmin, approvePayment);
+app.post('/api/admin/reject', authenticateToken, authenticateAdmin, rejectPayment);
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -112,6 +120,7 @@ function startServer() {
     app.listen(PORT, HOST, () => {
       console.log(`Backend server running at http://${HOST}:${PORT}/`);
       console.log('API endpoints available at /api/*');
+      console.log('Using SQLite database with admin support');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

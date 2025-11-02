@@ -62,7 +62,7 @@ async function login(req, res) {
 
   try {
     const user = db.prepare(
-      'SELECT id, phone, password_hash, referral_code, balance FROM users WHERE phone = ?'
+      'SELECT id, phone, password_hash, referral_code, balance, is_admin FROM users WHERE phone = ?'
     ).get(phone);
 
     if (!user) {
@@ -75,7 +75,11 @@ async function login(req, res) {
       return res.status(401).json({ error: 'Invalid phone or password' });
     }
 
-    const token = jwt.sign({ userId: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ 
+      userId: user.id, 
+      phone: user.phone,
+      isAdmin: user.is_admin 
+    }, JWT_SECRET, { expiresIn: '30d' });
 
     res.json({
       message: 'Login successful',
@@ -84,7 +88,8 @@ async function login(req, res) {
         id: user.id,
         phone: user.phone,
         referralCode: user.referral_code,
-        balance: user.balance
+        balance: user.balance,
+        isAdmin: user.is_admin
       }
     });
   } catch (error) {

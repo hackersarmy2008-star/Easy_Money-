@@ -19,6 +19,7 @@ function initDatabase() {
         total_welfare REAL DEFAULT 0.00,
         referral_code TEXT UNIQUE NOT NULL,
         referred_by TEXT,
+        is_admin INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
