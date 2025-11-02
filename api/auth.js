@@ -2,7 +2,12 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { db } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'easymoney-premium-jwt-secret-2024';
+let JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  JWT_SECRET = 'easymoney-premium-jwt-secret-2024-CHANGE-THIS-IN-PRODUCTION';
+  console.warn('\n⚠️  WARNING: Using default JWT_SECRET. Set JWT_SECRET environment variable for production!\n');
+}
 
 function generateReferralCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();

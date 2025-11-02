@@ -24,6 +24,16 @@ function initDatabase() {
       )
     `);
 
+    try {
+      db.exec('SELECT is_admin FROM users LIMIT 1');
+    } catch (error) {
+      if (error.message.includes('no such column')) {
+        console.log('Adding is_admin column to existing users table...');
+        db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0');
+        console.log('is_admin column added successfully');
+      }
+    }
+
     db.exec(`
       CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
