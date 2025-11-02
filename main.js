@@ -162,7 +162,7 @@ window.logout = function(){
 
 // Profile page functions
 window.viewAboutCompany = function(){
-  alert('Smart Farming is a revolutionary platform combining IoT technology with agriculture. Founded in 2024.');
+  alert('Easy Money is a revolutionary platform combining IoT technology with agriculture. Founded in 2024.');
 };
 
 window.viewIncomeRecord = async function(){
@@ -215,4 +215,6 @@ window.copyLink = function(){
 
 function sendOtp(){
   alert('OTP sent (demo). Use any code to continue.');
+}
+
 }

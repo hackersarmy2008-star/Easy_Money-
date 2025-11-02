@@ -4,8 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { initDatabase, pool } = require('./api/db');
 const { register, login, authenticateToken } = require('./api/auth');
-const { initiateRecharge, confirmRecharge, approveRecharge, initiateWithdraw, getTransactions } = require('./api/payment');
-const { getActiveQR, addQRCode, getAllQRCodes, updateQRCode, deleteQRCode, getQRStats, rotateQR } = require('./api/qr-rotation');
+const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions } = require('./api/payment');
 
 const app = express();
 const PORT = 5000;
@@ -97,95 +96,6 @@ app.post('/api/payment/recharge', authenticateToken, initiateRecharge);
 app.post('/api/payment/recharge/confirm', authenticateToken, confirmRecharge);
 app.post('/api/payment/withdraw', authenticateToken, initiateWithdraw);
 app.get('/api/transactions', authenticateToken, getTransactions);
-
-// Admin QR management endpoints
-app.get('/api/admin/qr/stats', async (req, res) => {
-  try {
-    const stats = await getQRStats();
-    res.json(stats);
-  } catch (error) {
-    console.error('QR stats error:', error);
-    res.status(500).json({ error: 'Failed to fetch QR stats' });
-  }
-});
-
-app.get('/api/admin/qr/all', async (req, res) => {
-  try {
-    const qrCodes = await getAllQRCodes();
-    res.json({ qrCodes });
-  } catch (error) {
-    console.error('Get QR codes error:', error);
-    res.status(500).json({ error: 'Failed to fetch QR codes' });
-  }
-});
-
-app.post('/api/admin/qr/add', async (req, res) => {
-  try {
-    const { upiId } = req.body;
-    if (!upiId) {
-      return res.status(400).json({ error: 'UPI ID is required' });
-    }
-    const qrCode = await addQRCode(upiId);
-    res.json({ message: 'QR code added successfully', qrCode });
-  } catch (error) {
-    console.error('Add QR error:', error);
-    res.status(500).json({ error: 'Failed to add QR code' });
-  }
-});
-
-app.put('/api/admin/qr/update/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { upiId } = req.body;
-    if (!upiId) {
-      return res.status(400).json({ error: 'UPI ID is required' });
-    }
-    const qrCode = await updateQRCode(id, upiId);
-    res.json({ message: 'QR code updated successfully', qrCode });
-  } catch (error) {
-    console.error('Update QR error:', error);
-    res.status(500).json({ error: 'Failed to update QR code' });
-  }
-});
-
-app.delete('/api/admin/qr/delete/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    await deleteQRCode(id);
-    res.json({ message: 'QR code deleted successfully' });
-  } catch (error) {
-    console.error('Delete QR error:', error);
-    res.status(500).json({ error: 'Failed to delete QR code' });
-  }
-});
-
-app.post('/api/admin/qr/rotate', async (req, res) => {
-  try {
-    const nextQR = await rotateQR();
-    res.json({ message: 'QR rotated successfully', nextQR });
-  } catch (error) {
-    console.error('Rotate QR error:', error);
-    res.status(500).json({ error: 'Failed to rotate QR' });
-  }
-});
-
-app.post('/api/admin/recharge/approve', approveRecharge);
-
-app.get('/api/admin/transactions/pending', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT t.*, u.phone 
-       FROM transactions t 
-       JOIN users u ON t.user_id = u.id 
-       WHERE t.type = 'recharge' AND t.status = 'verification_pending' 
-       ORDER BY t.created_at DESC`
-    );
-    res.json({ transactions: result.rows });
-  } catch (error) {
-    console.error('Get pending transactions error:', error);
-    res.status(500).json({ error: 'Failed to fetch pending transactions' });
-  }
-});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

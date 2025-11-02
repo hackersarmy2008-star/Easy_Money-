@@ -1,4 +1,4 @@
-# Smart Farming Clone
+# Easy Money
 
 ## Overview
 Smart Farming is a mobile-responsive web application clone that simulates an agricultural investment platform. The app allows users to register, login, view investment products, manage their balance, and participate in a referral program. Now features a complete backend API with PostgreSQL database and custom UPI payment integration.
@@ -259,3 +259,4 @@ Smart Farming is a mobile-responsive web application clone that simulates an agr
 - Database transactions ensure data consistency
 - Referral system is tracked in database for future rewards
 - Check-in system prevents duplicate daily check-ins
+heck-ins
