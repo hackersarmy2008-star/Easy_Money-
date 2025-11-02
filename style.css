@@ -855,10 +855,85 @@ main{
 }
 
 /* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px){
+  .banner{
+    padding: 0 12px;
+    margin-top: 12px;
+  }
+  .banner img{
+    border-radius: 16px;
+  }
+  .product-left img, .plan-left img{
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+  }
+  .product-card, .plan-card{
+    padding: 14px;
+    gap: 12px;
+  }
+  .product-mid h3, .plan-info h3{
+    font-size: 16px;
+  }
+  .income-row{
+    gap: 16px;
+  }
+  .product-mid .big, .income-row .big{
+    font-size: 14px;
+  }
+  .product-right .invest{
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  .header-top{
+    padding: 14px 16px;
+  }
+  .header-top .logo{
+    font-size: 18px;
+  }
+  .bottom-nav{
+    padding: 10px 0;
+  }
+  .bottom-nav .nav-item{
+    font-size: 11px;
+  }
+  .bottom-nav .nav-item i{
+    font-size: 22px;
+  }
+  .transactions, .plans, .products-page{
+    padding: 12px;
+  }
+  .transaction{
+    padding: 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px){
+  .product-left img, .plan-left img{
+    width: 70px;
+    height: 70px;
+  }
+  .product-card, .plan-card{
+    flex-wrap: wrap;
+  }
+  .product-mid, .plan-info{
+    flex: 1;
+    min-width: 180px;
+  }
+  .income-row{
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .income-row > div{
+    min-width: 80px;
+  }
+}
+
 @media (max-width: 420px){
-  .product-left img{
-    width: 72px;
-    height: 72px;
+  .product-left img, .plan-left img{
+    width: 64px;
+    height: 64px;
   }
   .profile-avatar{
     width: 64px;
@@ -881,5 +956,39 @@ main{
   }
   .quick-actions .action span{
     font-size: 10px;
+  }
+  .product-mid h3, .plan-info h3{
+    font-size: 15px;
+  }
+  .product-mid .big, .income-row .big{
+    font-size: 13px;
+  }
+  .product-right .invest, .plan-action button.invest-btn{
+    padding: 8px 16px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+  .banner{
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 360px){
+  .product-left img, .plan-left img{
+    width: 56px;
+    height: 56px;
+  }
+  .product-card, .plan-card{
+    padding: 12px;
+    gap: 10px;
+  }
+  .header-top .logo{
+    font-size: 16px;
+  }
+  .product-mid h3, .plan-info h3{
+    font-size: 14px;
+  }
+  .income-row .big{
+    font-size: 12px;
   }
 }

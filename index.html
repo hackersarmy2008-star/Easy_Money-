@@ -27,7 +27,7 @@
 
 <main>
   <section class="banner">
-    <img src="images/banner.jpg" alt="Easy Money Banner">
+    <img src="images/banner-premium.png" alt="Easy Money Premium Banner">
   </section>
 
   <section class="quick-actions">
@@ -75,12 +75,34 @@ const plans = [
   { name: "Farming 1", days: 45, daily: 990, total: 990, price: 296, img: "https://i.imgur.com/VVCEhgh.png" }
 ];
 
-const transactions = [
+const transactionPool = [
   { user: 6453, action: "Withdraw", amount: 5275, date:"2025-09-29 22:23" },
   { user: 7677, action: "Withdraw", amount: 3767, date:"2025-09-18 22:23" },
   { user: 5522, action: "Withdraw", amount: 1903, date:"2025-10-01 22:23" },
-  { user: 2957, action: "Withdraw", amount: 8658, date:"2025-10-02 22:23" }
+  { user: 2957, action: "Withdraw", amount: 8658, date:"2025-10-02 22:23" },
+  { user: 3456, action: "Withdraw", amount: 4520, date:"2025-10-03 15:45" },
+  { user: 8912, action: "Withdraw", amount: 6789, date:"2025-10-04 10:12" },
+  { user: 4523, action: "Withdraw", amount: 2345, date:"2025-10-05 18:30" },
+  { user: 7234, action: "Withdraw", amount: 9876, date:"2025-10-06 09:22" },
+  { user: 5678, action: "Withdraw", amount: 3456, date:"2025-10-07 14:56" },
+  { user: 9012, action: "Withdraw", amount: 7654, date:"2025-10-08 11:33" },
+  { user: 2345, action: "Withdraw", amount: 5432, date:"2025-10-09 16:45" },
+  { user: 6789, action: "Withdraw", amount: 8901, date:"2025-10-10 13:21" }
 ];
+
+let transactions = [];
+
+function getRandomTransactions() {
+  const shuffled = [...transactionPool].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 4);
+}
+
+transactions = getRandomTransactions();
+
+setInterval(() => {
+  transactions = getRandomTransactions();
+  renderTransactions();
+}, 60000);
 
 function renderPlans(){
   const grid = document.getElementById("plansGrid");
