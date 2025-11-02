@@ -216,5 +216,3 @@ window.copyLink = function(){
 function sendOtp(){
   alert('OTP sent (demo). Use any code to continue.');
 }
-
-}
