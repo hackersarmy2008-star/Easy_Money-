@@ -35,23 +35,7 @@
         </div>
       </div>
 
-      <div class="card" style="padding: 24px; margin-bottom: 24px;">
-        <h3 style="margin: 0 0 16px 0; font-size: 18px;">Create New Investment</h3>
-        <p style="color: var(--muted); margin: 0 0 16px 0; font-size: 14px;">
-          Invest from your wallet balance and earn ₹100 daily automatically
-        </p>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Investment Amount (₹)</label>
-          <input type="number" id="investAmount" placeholder="Enter amount" 
-            style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
-        </div>
-        <button onclick="createInvestment()" 
-          style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer;">
-          Invest Now
-        </button>
-      </div>
-
-      <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 700;">Active Investments</h3>
+      <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 700;">My Investment History</h3>
       <div id="investmentsList">
         <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
           <i class="bi bi-graph-up" style="font-size: 48px; opacity: 0.3;"></i>
@@ -159,28 +143,6 @@
             <p style="margin-top: 16px;">Failed to load investments</p>
           </div>
         `;
-      }
-    }
-
-    async function createInvestment() {
-      const amount = parseFloat(document.getElementById('investAmount').value);
-      
-      if (!amount || amount <= 0) {
-        alert('Please enter a valid amount');
-        return;
-      }
-
-      if (!confirm(`Invest ₹${amount} from your wallet?\n\nYou will earn ₹100 daily automatically.`)) {
-        return;
-      }
-
-      try {
-        const data = await apiCall('/invest', 'POST', { amount });
-        alert(data.message);
-        document.getElementById('investAmount').value = '';
-        loadInvestments();
-      } catch (error) {
-        alert(error.message);
       }
     }
 

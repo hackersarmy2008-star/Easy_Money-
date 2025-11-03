@@ -110,8 +110,18 @@
 
 <script src="main.js"></script>
 <script>
-function invest(price){
-  alert("Invested ₹"+price+" successfully!");
+async function invest(price){
+  if (!confirm(`Invest ₹${price} from your wallet?\n\nYou will earn ₹100 daily automatically.`)) {
+    return;
+  }
+
+  try {
+    const data = await apiCall('/invest', 'POST', { amount: price });
+    alert(data.message || 'Investment successful. ₹100 will be added to your wallet every 24 hours.');
+    window.location.reload();
+  } catch (error) {
+    alert(error.message || 'Investment failed. Please try again.');
+  }
 }
 </script>
 </body>
