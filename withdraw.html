@@ -194,7 +194,7 @@
     <div class="withdraw-info">
       <h4><i class="bi bi-info-circle"></i> Withdrawal Information</h4>
       <ul>
-        <li>Minimum withdrawal: ₹50</li>
+        <li>Minimum withdrawal: ₹300</li>
         <li>Processing time: Within 24 hours</li>
         <li>Enter correct UPI ID to receive payment</li>
         <li>Amount will be deducted immediately</li>
@@ -241,8 +241,8 @@ async function submitWithdrawal() {
     return;
   }
 
-  if(parseFloat(amount) < 50) {
-    alert('Minimum withdrawal amount is ₹50');
+  if(parseFloat(amount) < 300) {
+    alert('Minimum withdrawal amount is ₹300');
     return;
   }
 

@@ -123,6 +123,10 @@ async function initiateWithdraw(req, res) {
     return res.status(400).json({ error: 'Invalid amount' });
   }
 
+  if (amount < 300) {
+    return res.status(400).json({ error: 'Minimum withdrawal amount is ₹300' });
+  }
+
   if (!upiId) {
     return res.status(400).json({ error: 'UPI ID is required' });
   }
