@@ -1,18 +1,18 @@
 /* ---------- GLOBAL ---------- */
 :root{
-  --primary: #7c3aed;
-  --primary-2: #a78bfa;
-  --primary-3: #c4b5fd;
+  --primary: #FFD700;
+  --primary-2: #FFC300;
+  --primary-3: #FFE55C;
   --accent: #f59e0b;
   --accent-2: #fbbf24;
   --success: #10b981;
   --danger: #ef4444;
   --muted: #6b7280;
   --card: #ffffff;
-  --bg: linear-gradient(135deg, #f3f4ff 0%, #e8e9ff 100%);
-  --shadow-sm: 0 2px 8px rgba(124, 58, 237, 0.08);
-  --shadow-md: 0 8px 24px rgba(124, 58, 237, 0.12);
-  --shadow-lg: 0 16px 48px rgba(124, 58, 237, 0.16);
+  --bg: linear-gradient(135deg, #fffef0 0%, #fff9e6 100%);
+  --shadow-sm: 0 2px 8px rgba(255, 215, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(255, 215, 0, 0.12);
+  --shadow-lg: 0 16px 48px rgba(255, 215, 0, 0.16);
 }
 
 *{
