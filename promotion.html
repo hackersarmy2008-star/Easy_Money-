@@ -32,7 +32,7 @@
     </div>
     <div class="invite-mid">
       <p class="muted">Invitation Link</p>
-      <small class="muted">https://smartfarming77.com/home/register?invite=B1MDT71C</small>
+      <small class="muted" id="inviteLink">Loading...</small>
     </div>
     <div class="invite-right">
       <button class="copy-btn" onclick="copyLink()">Copy link</button>
@@ -88,15 +88,41 @@
 
 <script src="main.js"></script>
 <script>
+let userInviteLink = '';
+
+async function loadInviteLink() {
+  try {
+    const API_BASE = window.location.origin + '/api';
+    const token = localStorage.getItem('authToken');
+    
+    const response = await fetch(API_BASE + '/user/profile', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    const data = await response.json();
+    const referralCode = data.user.referral_code;
+    userInviteLink = `${window.location.origin}/register.html?invite=${referralCode}`;
+    
+    document.getElementById('inviteLink').textContent = userInviteLink;
+  } catch (error) {
+    console.error('Failed to load invitation link:', error);
+    document.getElementById('inviteLink').textContent = 'Error loading link';
+  }
+}
+
 function copyLink(){
   const tmp = document.createElement('input');
-  tmp.value = 'https://smartfarming77.com/home/register?invite=B1MDT71C';
+  tmp.value = userInviteLink;
   document.body.appendChild(tmp);
   tmp.select();
   document.execCommand('copy');
   document.body.removeChild(tmp);
   alert('Invitation link copied!');
 }
+
+loadInviteLink();
 </script>
 </body>
 </html>ml>

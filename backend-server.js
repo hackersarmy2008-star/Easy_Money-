@@ -30,6 +30,40 @@ app.use(express.static('.', {
 app.post('/api/auth/register', register);
 app.post('/api/auth/login', login);
 
+app.post('/api/auth/admin-login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+  
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    return res.status(500).json({ error: 'Admin credentials not configured' });
+  }
+  
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Invalid admin credentials' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  const JWT_SECRET = process.env.JWT_SECRET || 'easymoney-premium-jwt-secret-2024-CHANGE-THIS-IN-PRODUCTION';
+  
+  const token = jwt.sign({ 
+    userId: 0,
+    phone: 'admin',
+    isAdmin: true
+  }, JWT_SECRET, { expiresIn: '24h' });
+  
+  res.json({
+    message: 'Admin login successful',
+    token,
+    user: {
+      id: 0,
+      phone: 'admin',
+      isAdmin: true
+    }
+  });
+});
+
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
     const result = db.prepare(
