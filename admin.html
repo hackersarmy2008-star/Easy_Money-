@@ -187,6 +187,7 @@ tr:hover {
     <button class="tab-btn active" onclick="showTab('users')">Users</button>
     <button class="tab-btn" onclick="showTab('transactions')">Transactions</button>
     <button class="tab-btn" onclick="showTab('pending')">Pending Payments</button>
+    <button class="tab-btn" onclick="showTab('withdrawals')">Withdrawal Approvals</button>
     <button class="tab-btn" onclick="showTab('upi')">UPI Management</button>
   </div>
 
@@ -251,6 +252,28 @@ tr:hover {
     </table>
   </div>
 
+  <div id="withdrawalsTab" class="data-table hidden">
+    <h3><i class="bi bi-cash-coin"></i> Pending Withdrawal Approvals</h3>
+    <p style="margin-bottom:20px; color:#666;">
+      Review and approve or deny user withdrawal requests. Approved withdrawals will deduct from user balance.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User Phone</th>
+          <th>Amount</th>
+          <th>UPI ID</th>
+          <th>Requested</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="withdrawalsTableBody">
+        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <div id="upiTab" class="data-table hidden">
     <h3><i class="bi bi-credit-card"></i> UPI Payment Rotation System</h3>
     <p style="margin-bottom:20px; color:#666;">
@@ -288,6 +311,7 @@ function showTab(tab) {
   document.getElementById('usersTab').classList.add('hidden');
   document.getElementById('transactionsTab').classList.add('hidden');
   document.getElementById('pendingTab').classList.add('hidden');
+  document.getElementById('withdrawalsTab').classList.add('hidden');
   document.getElementById('upiTab').classList.add('hidden');
   
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -301,9 +325,13 @@ function showTab(tab) {
   } else if (tab === 'pending') {
     document.getElementById('pendingTab').classList.remove('hidden');
     document.querySelectorAll('.tab-btn')[2].classList.add('active');
+  } else if (tab === 'withdrawals') {
+    document.getElementById('withdrawalsTab').classList.remove('hidden');
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    loadWithdrawals();
   } else if (tab === 'upi') {
     document.getElementById('upiTab').classList.remove('hidden');
-    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    document.querySelectorAll('.tab-btn')[4].classList.add('active');
     loadUPIs();
   }
 }
@@ -439,6 +467,67 @@ async function rejectPayment(id) {
   }
 }
 
+async function loadWithdrawals() {
+  try {
+    const data = await apiCall('/admin/pending-withdrawals', 'GET');
+    const tbody = document.getElementById('withdrawalsTableBody');
+    tbody.innerHTML = '';
+    
+    if (data.withdrawals && data.withdrawals.length > 0) {
+      data.withdrawals.forEach(w => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${w.id}</td>
+            <td>${w.phone}</td>
+            <td>₹${parseFloat(w.requested_amount).toFixed(2)}</td>
+            <td>${w.upi_id || '-'}</td>
+            <td>${new Date(w.created_at).toLocaleDateString()}</td>
+            <td>
+              <button class="action-btn approve" onclick="approveWithdrawal(${w.id})">
+                <i class="bi bi-check-circle"></i> Approve
+              </button>
+              <button class="action-btn reject" onclick="denyWithdrawal(${w.id})">
+                <i class="bi bi-x-circle"></i> Deny
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No pending withdrawals</td></tr>';
+    }
+  } catch (error) {
+    console.error('Failed to load withdrawals:', error);
+    document.getElementById('withdrawalsTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load withdrawals</td></tr>';
+  }
+}
+
+async function approveWithdrawal(id) {
+  if (!confirm('Approve this withdrawal? The amount will be deducted from the user\'s wallet.')) return;
+  
+  try {
+    await apiCall(`/admin/withdraw/${id}/approve`, 'POST', {});
+    alert('Withdrawal approved successfully!');
+    loadWithdrawals();
+    loadStats();
+  } catch (error) {
+    alert('Failed to approve withdrawal: ' + error.message);
+  }
+}
+
+async function denyWithdrawal(id) {
+  const reason = prompt('Enter reason for denial (optional):');
+  if (reason === null) return;
+  
+  try {
+    await apiCall(`/admin/withdraw/${id}/deny`, 'POST', { reason });
+    alert('Withdrawal denied successfully!');
+    loadWithdrawals();
+  } catch (error) {
+    alert('Failed to deny withdrawal: ' + error.message);
+  }
+}
+
 async function loadUPIs() {
   try {
     const data = await apiCall('/admin/upis', 'GET');
@@ -485,6 +574,7 @@ setInterval(() => {
   if (currentTab === 'users') loadUsers();
   else if (currentTab === 'transactions') loadTransactions();
   else if (currentTab === 'pending') loadPending();
+  else if (currentTab === 'withdrawals') loadWithdrawals();
   else if (currentTab === 'upi') loadUPIs();
 }, 30000);
 </script>

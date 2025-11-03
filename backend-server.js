@@ -4,7 +4,8 @@ const cors = require('cors');
 const path = require('path');
 const { initDatabase, db } = require('./api/db');
 const { register, login, authenticateToken } = require('./api/auth');
-const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions, approveRecharge } = require('./api/payment');
+const { initiateRecharge, confirmRecharge, initiateWithdraw, approveWithdrawal, denyWithdrawal, getUserWithdrawals, getTransactions, approveRecharge } = require('./api/payment');
+const { createInvestment, getUserInvestments, processDailyGrowth, getInvestmentStats } = require('./api/investment');
 const { authenticateAdmin, getStats, getAllUsers, getAllTransactions, getPendingPayments, approvePayment, rejectPayment, getUPIs } = require('./api/admin-sqlite');
 
 const app = express();
@@ -125,7 +126,13 @@ app.post('/api/user/checkin', authenticateToken, async (req, res) => {
 app.post('/api/payment/recharge', authenticateToken, initiateRecharge);
 app.post('/api/payment/recharge/confirm', authenticateToken, confirmRecharge);
 app.post('/api/payment/withdraw', authenticateToken, initiateWithdraw);
+app.get('/api/withdrawals', authenticateToken, getUserWithdrawals);
 app.get('/api/transactions', authenticateToken, getTransactions);
+
+app.post('/api/invest', authenticateToken, createInvestment);
+app.get('/api/investments', authenticateToken, getUserInvestments);
+
+app.post('/api/cron/daily-growth', processDailyGrowth);
 
 app.get('/api/admin/stats', authenticateToken, authenticateAdmin, getStats);
 app.get('/api/admin/users', authenticateToken, authenticateAdmin, getAllUsers);
@@ -134,6 +141,34 @@ app.get('/api/admin/pending', authenticateToken, authenticateAdmin, getPendingPa
 app.post('/api/admin/approve', authenticateToken, authenticateAdmin, approvePayment);
 app.post('/api/admin/reject', authenticateToken, authenticateAdmin, rejectPayment);
 app.get('/api/admin/upis', authenticateToken, authenticateAdmin, getUPIs);
+app.get('/api/admin/investment-stats', authenticateToken, authenticateAdmin, getInvestmentStats);
+
+app.get('/api/admin/pending-withdrawals', authenticateToken, authenticateAdmin, async (req, res) => {
+  try {
+    const withdrawals = db.prepare(`
+      SELECT w.id, w.user_id, w.requested_amount, w.status, w.upi_id, w.created_at, u.phone 
+      FROM withdrawals w
+      JOIN users u ON w.user_id = u.id
+      WHERE w.status = 'pending'
+      ORDER BY w.created_at DESC
+    `).all();
+    res.json({ withdrawals });
+  } catch (error) {
+    console.error('Get pending withdrawals error:', error);
+    res.status(500).json({ error: 'Failed to fetch pending withdrawals' });
+  }
+});
+
+app.post('/api/admin/withdraw/:id/approve', authenticateToken, authenticateAdmin, async (req, res) => {
+  const withdrawalId = parseInt(req.params.id);
+  await approveWithdrawal({ ...req, body: { withdrawalId } }, res);
+});
+
+app.post('/api/admin/withdraw/:id/deny', authenticateToken, authenticateAdmin, async (req, res) => {
+  const withdrawalId = parseInt(req.params.id);
+  const { reason } = req.body;
+  await denyWithdrawal({ ...req, body: { withdrawalId, reason } }, res);
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

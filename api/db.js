@@ -41,12 +41,31 @@ function initDatabase() {
         type TEXT NOT NULL,
         amount REAL NOT NULL,
         status TEXT DEFAULT 'pending',
+        old_balance REAL,
+        new_balance REAL,
+        admin_id INTEGER,
+        remarks TEXT,
         upi_id TEXT,
         utr_number TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);
+
+    try {
+      db.exec('SELECT old_balance, new_balance, admin_id, remarks FROM transactions LIMIT 1');
+    } catch (error) {
+      if (error.message.includes('no such column')) {
+        console.log('Adding tracking columns to transactions table...');
+        db.exec(`
+          ALTER TABLE transactions ADD COLUMN old_balance REAL;
+          ALTER TABLE transactions ADD COLUMN new_balance REAL;
+          ALTER TABLE transactions ADD COLUMN admin_id INTEGER;
+          ALTER TABLE transactions ADD COLUMN remarks TEXT;
+        `);
+        console.log('Tracking columns added successfully to transactions');
+      }
+    }
 
     db.exec(`
       CREATE TABLE IF NOT EXISTS checkins (
@@ -70,7 +89,33 @@ function initDatabase() {
         total_profit REAL NOT NULL,
         days INTEGER NOT NULL,
         status TEXT DEFAULT 'active',
+        last_growth_time DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    try {
+      db.exec('SELECT last_growth_time FROM investments LIMIT 1');
+    } catch (error) {
+      if (error.message.includes('no such column')) {
+        console.log('Adding last_growth_time column to investments table...');
+        db.exec('ALTER TABLE investments ADD COLUMN last_growth_time DATETIME');
+        console.log('last_growth_time column added successfully');
+      }
+    }
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS withdrawals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        requested_amount REAL NOT NULL,
+        status TEXT DEFAULT 'pending',
+        admin_id INTEGER,
+        reason TEXT,
+        upi_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);

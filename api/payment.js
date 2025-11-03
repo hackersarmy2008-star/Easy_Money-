@@ -136,35 +136,150 @@ async function initiateWithdraw(req, res) {
     const currentBalance = parseFloat(user.balance);
 
     if (currentBalance < amount) {
-      return res.status(400).json({ error: 'Insufficient balance' });
+      return res.status(400).json({ 
+        error: "You don't have enough balance to withdraw." 
+      });
     }
 
-    const withdrawTransaction = db.transaction(() => {
-      const result = db.prepare(
-        `INSERT INTO transactions (user_id, type, amount, status, upi_id) 
-         VALUES (?, ?, ?, ?, ?)`
-      ).run(userId, 'withdraw', amount, 'pending', upiId);
+    const result = db.prepare(
+      `INSERT INTO withdrawals (user_id, requested_amount, status, upi_id) 
+       VALUES (?, ?, ?, ?)`
+    ).run(userId, amount, 'pending', upiId);
 
-      db.prepare(
-        'UPDATE users SET balance = balance - ?, total_withdraw = total_withdraw + ? WHERE id = ?'
-      ).run(amount, amount, userId);
-
-      return result.lastInsertRowid;
-    });
-
-    const transactionId = withdrawTransaction();
-
-    const updatedUser = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId);
+    const withdrawalId = result.lastInsertRowid;
 
     res.json({
-      message: 'Withdrawal request submitted successfully',
-      transactionId: transactionId,
-      balance: updatedUser.balance,
-      note: 'Your withdrawal will be processed within 24 hours'
+      message: 'Processing — please wait up to 24 hours for admin approval.',
+      withdrawalId: withdrawalId,
+      amount: amount,
+      status: 'pending'
     });
   } catch (error) {
     console.error('Withdraw error:', error);
     res.status(500).json({ error: 'Failed to process withdrawal' });
+  }
+}
+
+async function approveWithdrawal(req, res) {
+  const { withdrawalId } = req.body;
+  const adminId = req.user.userId;
+
+  if (!withdrawalId) {
+    return res.status(400).json({ error: 'Withdrawal ID is required' });
+  }
+
+  try {
+    const withdrawal = db.prepare(
+      'SELECT id, user_id, requested_amount, status, upi_id FROM withdrawals WHERE id = ?'
+    ).get(withdrawalId);
+
+    if (!withdrawal) {
+      return res.status(404).json({ error: 'Withdrawal request not found' });
+    }
+
+    if (withdrawal.status !== 'pending') {
+      return res.status(400).json({ error: 'Withdrawal already processed' });
+    }
+
+    const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(withdrawal.user_id);
+    
+    if (user.balance < withdrawal.requested_amount) {
+      return res.status(400).json({ error: 'User has insufficient balance' });
+    }
+
+    const oldBalance = user.balance;
+    const newBalance = oldBalance - withdrawal.requested_amount;
+
+    const approveTransaction = db.transaction(() => {
+      db.prepare(
+        'UPDATE withdrawals SET status = ?, admin_id = ?, updated_at = datetime(?) WHERE id = ?'
+      ).run('approved', adminId, new Date().toISOString(), withdrawalId);
+
+      db.prepare(
+        'UPDATE users SET balance = ?, total_withdraw = total_withdraw + ? WHERE id = ?'
+      ).run(newBalance, withdrawal.requested_amount, withdrawal.user_id);
+
+      db.prepare(
+        `INSERT INTO transactions (user_id, type, amount, status, old_balance, new_balance, admin_id, remarks, upi_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        withdrawal.user_id, 
+        'withdraw', 
+        withdrawal.requested_amount, 
+        'completed',
+        oldBalance,
+        newBalance,
+        adminId,
+        `Withdrawal approved by admin - ID: ${withdrawalId}`,
+        withdrawal.upi_id
+      );
+    });
+
+    approveTransaction();
+
+    res.json({
+      message: 'Withdrawal approved successfully',
+      withdrawalId: withdrawalId,
+      amount: withdrawal.requested_amount,
+      userNewBalance: newBalance.toFixed(2)
+    });
+  } catch (error) {
+    console.error('Approve withdrawal error:', error);
+    res.status(500).json({ error: 'Failed to approve withdrawal' });
+  }
+}
+
+async function denyWithdrawal(req, res) {
+  const { withdrawalId, reason } = req.body;
+  const adminId = req.user.userId;
+
+  if (!withdrawalId) {
+    return res.status(400).json({ error: 'Withdrawal ID is required' });
+  }
+
+  try {
+    const withdrawal = db.prepare(
+      'SELECT id, user_id, requested_amount, status FROM withdrawals WHERE id = ?'
+    ).get(withdrawalId);
+
+    if (!withdrawal) {
+      return res.status(404).json({ error: 'Withdrawal request not found' });
+    }
+
+    if (withdrawal.status !== 'pending') {
+      return res.status(400).json({ error: 'Withdrawal already processed' });
+    }
+
+    db.prepare(
+      'UPDATE withdrawals SET status = ?, admin_id = ?, reason = ?, updated_at = datetime(?) WHERE id = ?'
+    ).run('denied', adminId, reason || 'Denied by admin', new Date().toISOString(), withdrawalId);
+
+    res.json({
+      message: 'Withdrawal denied successfully',
+      withdrawalId: withdrawalId
+    });
+  } catch (error) {
+    console.error('Deny withdrawal error:', error);
+    res.status(500).json({ error: 'Failed to deny withdrawal' });
+  }
+}
+
+async function getUserWithdrawals(req, res) {
+  const userId = req.user.userId;
+
+  try {
+    const withdrawals = db.prepare(
+      `SELECT id, requested_amount, status, upi_id, reason, created_at, updated_at 
+       FROM withdrawals 
+       WHERE user_id = ? 
+       ORDER BY created_at DESC 
+       LIMIT 50`
+    ).all(userId);
+
+    res.json({ withdrawals });
+  } catch (error) {
+    console.error('Get withdrawals error:', error);
+    res.status(500).json({ error: 'Failed to fetch withdrawals' });
   }
 }
 
@@ -192,5 +307,8 @@ module.exports = {
   confirmRecharge,
   approveRecharge,
   initiateWithdraw,
+  approveWithdrawal,
+  denyWithdrawal,
+  getUserWithdrawals,
   getTransactions
 };
