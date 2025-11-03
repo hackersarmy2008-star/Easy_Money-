@@ -153,6 +153,21 @@ async function rejectPayment(req, res) {
   }
 }
 
+async function getUPIs(req, res) {
+  try {
+    const result = db.prepare(
+      `SELECT id, upi_id, qr_position, successful_payments, max_payments_per_qr, is_active, created_at 
+       FROM qr_codes 
+       ORDER BY qr_position ASC`
+    ).all();
+
+    res.json({ upis: result });
+  } catch (error) {
+    console.error('Get UPIs error:', error);
+    res.status(500).json({ error: 'Failed to fetch UPI IDs' });
+  }
+}
+
 module.exports = {
   authenticateAdmin,
   getStats,
@@ -160,5 +175,6 @@ module.exports = {
   getAllTransactions,
   getPendingPayments,
   approvePayment,
-  rejectPayment
+  rejectPayment,
+  getUPIs
 };

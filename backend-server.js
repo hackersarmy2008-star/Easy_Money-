@@ -5,7 +5,7 @@ const path = require('path');
 const { initDatabase, db } = require('./api/db');
 const { register, login, authenticateToken } = require('./api/auth');
 const { initiateRecharge, confirmRecharge, initiateWithdraw, getTransactions, approveRecharge } = require('./api/payment');
-const { authenticateAdmin, getStats, getAllUsers, getAllTransactions, getPendingPayments, approvePayment, rejectPayment } = require('./api/admin-sqlite');
+const { authenticateAdmin, getStats, getAllUsers, getAllTransactions, getPendingPayments, approvePayment, rejectPayment, getUPIs } = require('./api/admin-sqlite');
 
 const app = express();
 const PORT = 5000;
@@ -133,6 +133,7 @@ app.get('/api/admin/transactions', authenticateToken, authenticateAdmin, getAllT
 app.get('/api/admin/pending', authenticateToken, authenticateAdmin, getPendingPayments);
 app.post('/api/admin/approve', authenticateToken, authenticateAdmin, approvePayment);
 app.post('/api/admin/reject', authenticateToken, authenticateAdmin, rejectPayment);
+app.get('/api/admin/upis', authenticateToken, authenticateAdmin, getUPIs);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -10,9 +10,54 @@ Easy Money Premium is a mobile-responsive web application that simulates an agri
 - **Port**: 5000
 - **Storage**: SQLite database for persistent user data
 
-## Recent Changes (November 2, 2025)
+## Recent Changes (November 3, 2025)
 
-### Latest Updates - Admin Panel & Enhanced UI
+### Latest Updates - Premium Golden Theme & Enhanced Security
+- ✅ **Premium Golden Theme**:
+  - Changed entire website color scheme from purple to premium golden (#FFD700)
+  - Updated CSS variables for primary, primary-2, and primary-3 colors
+  - Golden gradient backgrounds throughout the application
+  - Enhanced admin panel with golden theme
+  - Professional, premium appearance across all pages
+  
+- ✅ **Enhanced Admin Security**:
+  - Created dedicated admin login page (/admin-login.html)
+  - Admin credentials stored securely in environment variables
+  - Username: easymoney@shaw (stored in ADMIN_USERNAME secret)
+  - Password: scam@#565428& (stored in ADMIN_PASSWORD secret)
+  - Separate authentication endpoint: /api/auth/admin-login
+  - 24-hour JWT token expiration for admin sessions
+  
+- ✅ **Withdrawal Amount Update**:
+  - Changed minimum withdrawal from ₹50 to ₹300
+  - Updated validation in backend API (/api/payment/withdraw)
+  - Updated frontend validation in withdraw.html
+  - Clear error message: "Minimum withdrawal amount is ₹300"
+  - Updated withdrawal information display
+  
+- ✅ **Dynamic Invitation Links**:
+  - Each user gets unique invitation link based on referral code
+  - Links auto-refresh from user profile data
+  - Format: {domain}/register.html?invite={referralCode}
+  - Real-time link generation on promotion page
+  - Copy to clipboard functionality maintained
+  
+- ✅ **UPI Management Dashboard**:
+  - Added UPI Management tab to admin panel
+  - View all 7 UPI IDs with rotation status
+  - Track successful payments per UPI ID
+  - Monitor active/inactive UPI status
+  - Automatic rotation after 10 successful payments
+  - Admin endpoint: /api/admin/upis
+  
+- ✅ **Mobile Responsiveness**:
+  - Existing responsive CSS maintained
+  - Golden theme optimized for all screen sizes
+  - Admin panel fully responsive
+  - Breakpoints: 768px, 480px, 420px, 360px
+  - Touch-friendly interface on mobile devices
+
+### Previous Updates (November 2, 2025) - Admin Panel & Enhanced UI
 - ✅ **Admin Panel Implementation**:
   - Created comprehensive admin dashboard (/admin.html)
   - Real-time statistics: total users, balance, recharge, withdraw

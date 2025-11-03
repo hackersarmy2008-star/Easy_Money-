@@ -135,7 +135,26 @@ tr:hover {
 <script>
   const token = localStorage.getItem('authToken');
   if (!token) {
-    window.location.href = 'login.html';
+    window.location.href = 'admin-login.html';
+  } else {
+    async function verifyAdminAccess() {
+      try {
+        const response = await fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          localStorage.clear();
+          window.location.href = 'admin-login.html';
+        }
+      } catch (error) {
+        localStorage.clear();
+        window.location.href = 'admin-login.html';
+      }
+    }
+    verifyAdminAccess();
   }
 </script>
 
@@ -168,6 +187,7 @@ tr:hover {
     <button class="tab-btn active" onclick="showTab('users')">Users</button>
     <button class="tab-btn" onclick="showTab('transactions')">Transactions</button>
     <button class="tab-btn" onclick="showTab('pending')">Pending Payments</button>
+    <button class="tab-btn" onclick="showTab('upi')">UPI Management</button>
   </div>
 
   <div id="usersTab" class="data-table">
@@ -231,8 +251,29 @@ tr:hover {
     </table>
   </div>
 
+  <div id="upiTab" class="data-table hidden">
+    <h3><i class="bi bi-credit-card"></i> UPI Payment Rotation System</h3>
+    <p style="margin-bottom:20px; color:#666;">
+      The system automatically rotates through 7 UPI IDs. After 10 successful payments on one UPI, it automatically switches to the next one.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th>UPI ID</th>
+          <th>Successful Payments</th>
+          <th>Max Payments</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="upiTableBody">
+        <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <div style="text-align:center; margin-top:30px;">
-    <button class="action-btn" onclick="logout()" style="background:#dc3545;">
+    <button class="action-btn" onclick="logout()" style="background:#dc3545; color:white;">
       <i class="bi bi-box-arrow-right"></i> Logout
     </button>
   </div>
@@ -247,6 +288,7 @@ function showTab(tab) {
   document.getElementById('usersTab').classList.add('hidden');
   document.getElementById('transactionsTab').classList.add('hidden');
   document.getElementById('pendingTab').classList.add('hidden');
+  document.getElementById('upiTab').classList.add('hidden');
   
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   
@@ -259,6 +301,10 @@ function showTab(tab) {
   } else if (tab === 'pending') {
     document.getElementById('pendingTab').classList.remove('hidden');
     document.querySelectorAll('.tab-btn')[2].classList.add('active');
+  } else if (tab === 'upi') {
+    document.getElementById('upiTab').classList.remove('hidden');
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    loadUPIs();
   }
 }
 
@@ -393,9 +439,40 @@ async function rejectPayment(id) {
   }
 }
 
+async function loadUPIs() {
+  try {
+    const data = await apiCall('/admin/upis', 'GET');
+    const tbody = document.getElementById('upiTableBody');
+    tbody.innerHTML = '';
+    
+    if (data.upis && data.upis.length > 0) {
+      data.upis.forEach(upi => {
+        const statusBadge = upi.is_active ? 
+          '<span class="badge completed">ACTIVE</span>' : 
+          '<span class="badge pending">Inactive</span>';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td>${upi.qr_position}</td>
+            <td>${upi.upi_id}</td>
+            <td>${upi.successful_payments}</td>
+            <td>${upi.max_payments_per_qr}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No UPI IDs found</td></tr>';
+    }
+  } catch (error) {
+    console.error('Failed to load UPIs:', error);
+    document.getElementById('upiTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Failed to load UPI IDs</td></tr>';
+  }
+}
+
 function logout() {
   localStorage.clear();
-  window.location.href = 'login.html';
+  window.location.href = 'admin-login.html';
 }
 
 loadStats();
@@ -408,6 +485,7 @@ setInterval(() => {
   if (currentTab === 'users') loadUsers();
   else if (currentTab === 'transactions') loadTransactions();
   else if (currentTab === 'pending') loadPending();
+  else if (currentTab === 'upi') loadUPIs();
 }, 30000);
 </script>
 </body>

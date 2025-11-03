@@ -38,7 +38,7 @@ body{
   padding: 16px 20px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 .header-top .logo{
   font-weight: 800;
@@ -66,7 +66,7 @@ body{
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 12px 0;
-  border-top: 1px solid rgba(124, 58, 237, 0.1);
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
   z-index: 40;
 }
@@ -169,7 +169,7 @@ main{
   gap: 16px;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
-  border: 1px solid rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
 }
 .plan-card:hover{
   transform: translateY(-4px);
@@ -254,7 +254,7 @@ main{
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 .page-header h2{
   font-size: 24px;
@@ -283,7 +283,7 @@ main{
   margin-bottom: 20px;
 }
 .tab{
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 195, 0, 0.1) 100%);
   color: var(--primary);
   border-radius: 24px;
   padding: 10px 20px;
@@ -315,7 +315,7 @@ main{
   gap: 16px;
   box-shadow: var(--shadow-md);
   position: relative;
-  border: 1px solid rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
   transition: all 0.3s ease;
 }
 .product-card:hover{
@@ -398,7 +398,7 @@ main{
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.1);
   transition: all 0.3s ease;
 }
 .card:hover{
@@ -410,7 +410,7 @@ main{
   justify-content: space-around;
   padding: 20px;
   align-items: center;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 195, 0, 0.05) 100%);
   border-radius: 16px;
 }
 .promo-stats .stat{
@@ -427,7 +427,7 @@ main{
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 195, 0, 0.05) 100%);
   border-radius: 16px;
 }
 .invite-left img{
@@ -492,7 +492,7 @@ main{
   flex: 1;
   text-align: center;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 195, 0, 0.05) 100%);
   border-radius: 12px;
 }
 .level-row .big{
@@ -510,7 +510,7 @@ main{
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 .profile-top h2{
   font-size: 24px;
@@ -551,7 +551,7 @@ main{
   font-size: 14px;
 }
 .profile-lock{
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 195, 0, 0.1) 100%);
   padding: 12px;
   border-radius: 12px;
   color: var(--primary);
@@ -604,7 +604,7 @@ main{
   display: flex;
   justify-content: space-between;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 195, 0, 0.1) 100%);
   color: #111827;
   border-radius: 20px;
   margin-bottom: 16px;
@@ -636,7 +636,7 @@ main{
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.08);
   text-decoration: none;
   color: #374151;
   font-weight: 600;
@@ -646,7 +646,7 @@ main{
   border-bottom: none;
 }
 .links a:hover{
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 195, 0, 0.05) 100%);
   padding-left: 24px;
 }
 .links a i:first-child{
@@ -732,7 +732,7 @@ main{
 .input-row:focus-within{
   border-color: var(--primary);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
 }
 .input-row input{
   border: 0;
@@ -766,7 +766,7 @@ main{
 .otp-row input:focus{
   border-color: var(--primary);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
 }
 .otp-row .otp-btn{
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
