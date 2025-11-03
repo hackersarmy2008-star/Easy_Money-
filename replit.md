@@ -38,11 +38,13 @@ The project uses a standard web application architecture:
 - **Authentication**: User registration with phone and password, JWT-based login, automatic referral code generation.
 - **Dashboard**: Displays banners, quick actions (Check-in, Invest, Recharge, Withdraw), special investment plans, and recent transactions.
 - **Investment System**: 
-  - Users can create investments directly from their wallet balance
-  - Daily ₹100 automatic growth added to wallet for active investors
+  - Users can create investments from the home page and products page by clicking "Invest" buttons on product cards
+  - Investments are deducted from wallet balance with real-time validation
+  - Daily ₹100 automatic growth added to wallet for each active investment
   - Investment tracking with last growth time to ensure 24-hour intervals
   - Comprehensive transaction logging for all investment activities
-  - Investment management page showing active investments and earnings
+  - Investment history page (investments.html) displays only past investments and earnings summary
+  - Users can access investment history via "My Investments" link in profile page
 - **Products**: Lists investment products with daily/total income calculations and one-click investment.
 - **Promotion**: Shows referral statistics, unique invitation links, and supports a multi-level commission structure.
 - **Profile**: Displays user profile, real-time balance, statistics (total recharge, withdraw, welfare), and quick links.
