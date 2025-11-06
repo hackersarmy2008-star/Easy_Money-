@@ -1,34 +1,27 @@
-const fetch = require('node').fetch || require('https');
+// cron-daily-growth.js
+// Triggers POST /api/cron/daily-growth using environment URL if provided.
 
-const API_URL = process.env.REPLIT_DEV_DOMAIN 
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/cron/daily-growth`
-  : 'http://localhost:5000/api/cron/daily-growth';
+const fetchFn = (typeof fetch !== 'undefined') ? fetch : require('node-fetch');
 
-async function runDailyGrowth() {
+const API_URL =
+  process.env.RENDER_EXTERNAL_URL
+    ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '')}/api/cron/daily-growth`
+    : process.env.REPLIT_DEV_DOMAIN
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/cron/daily-growth`
+      : 'http://localhost:5000/api/cron/daily-growth';
+
+(async function runDailyGrowth() {
   try {
     console.log('Starting daily growth process...');
     console.log('Calling:', API_URL);
 
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    const response = await fetchFn(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
     const data = await response.json();
-    console.log('Daily growth completed successfully:');
-    console.log(`- Processed: ${data.processed}`);
-    console.log(`- Skipped: ${data.skipped}`);
-    console.log(`- Total: ${data.total}`);
-  } catch (error) {
-    console.error('Daily growth failed:', error.message);
+    console.log('Daily growth completed successfully:', data);
+  } catch (err) {
+    console.error('Daily growth failed:', err.message);
     process.exit(1);
   }
-}
-
-runDailyGrowth();
+})();
